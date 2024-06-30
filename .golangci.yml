@@ -57,7 +57,7 @@ linters-settings:
         replacement: 'any'
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
-  gomnd:
+  mnd:
     # don't include the "operation" and "assign"
     checks:
       - argument
@@ -96,9 +96,11 @@ linters-settings:
     require-specific: true # require nolint directives to be specific about which linter is being skipped
   revive:
     rules:
+      - name: indent-error-flow
       - name: unexported-return
         disabled: true
       - name: unused-parameter
+      - name: unused-receiver
 
 linters:
   disable-all: true
@@ -119,7 +121,7 @@ linters:
     - godox
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -133,6 +135,7 @@ linters:
     - revive
     - staticcheck
     - stylecheck
+    - testifylint
     - unconvert
     - unparam
     - unused
@@ -143,47 +146,59 @@ linters:
   # See the comment on top of this file.
 
 issues:
-  # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     - path: (.+)_test\.go
       linters:
         - dupl
-        - gomnd
+        - mnd
         - lll
 
+    # The logic of creating a linter is similar between linters, it's not duplication.
     - path: pkg/golinters
       linters:
         - dupl
 
-    - path: pkg/golinters/errcheck.go
-      linters: [staticcheck]
-      text: "SA1019: errCfg.Exclude is deprecated: use ExcludeFunctions instead"
-    - path: pkg/commands/run.go
-      linters: [staticcheck]
-      text: "SA1019: lsc.Errcheck.Exclude is deprecated: use ExcludeFunctions instead"
+    # Deprecated configuration options.
     - path: pkg/commands/run.go
       linters: [staticcheck]
       text: "SA1019: c.cfg.Run.ShowStats is deprecated: use Output.ShowStats instead."
-    - path: pkg/golinters/govet.go
-      text: "SA1019: cfg.CheckShadowing is deprecated: the linter should be enabled inside `Enable`."
-    - path: pkg/commands/config.go
-      text: "SA1019: cfg.Run.UseDefaultSkipDirs is deprecated: use Issues.UseDefaultExcludeDirs instead."
 
-    - path: pkg/golinters/godot.go
+    # Deprecated linter options.
+    - path: pkg/golinters/errcheck/errcheck.go
       linters: [staticcheck]
-      text: "SA1019: settings.CheckAll is deprecated: use `Scope` instead"
+      text: "SA1019: errCfg.Exclude is deprecated: use ExcludeFunctions instead"
+    - path: pkg/golinters/errcheck/errcheck.go
+      linters: [staticcheck]
+      text: "SA1019: errCfg.Ignore is deprecated: use ExcludeFunctions instead"
+    - path: pkg/golinters/govet/govet.go
+      linters: [staticcheck]
+      text: "SA1019: cfg.CheckShadowing is deprecated: the linter should be enabled inside Enable."
+    - path: pkg/golinters/godot/godot.go
+      linters: [staticcheck]
+      text: "SA1019: settings.CheckAll is deprecated: use Scope instead"
+    - path: pkg/golinters/gci/gci.go
+      linters: [staticcheck]
+      text: "SA1019: settings.LocalPrefixes is deprecated: use Sections instead."
+    - path: pkg/golinters/mnd/mnd.go
+      linters: [staticcheck]
+      text: "SA1019: settings.Settings is deprecated: use root level settings instead."
+    - path: pkg/golinters/mnd/mnd.go
+      linters: [staticcheck]
+      text: "SA1019: config.GoMndSettings is deprecated: use MndSettings."
 
-    - path: pkg/golinters/gofumpt.go
+    # Related to `run.go`, it cannot be removed.
+    - path: pkg/golinters/gofumpt/gofumpt.go
       linters: [staticcheck]
       text: "SA1019: settings.LangVersion is deprecated: use the global `run.go` instead."
-    - path: pkg/golinters/staticcheck_common.go
+    - path: pkg/golinters/internal/staticcheck_common.go
       linters: [staticcheck]
       text: "SA1019: settings.GoVersion is deprecated: use the global `run.go` instead."
     - path: pkg/lint/lintersdb/manager.go
       linters: [staticcheck]
       text: "SA1019: (.+).(GoVersion|LangVersion) is deprecated: use the global `run.go` instead."
 
-    - path: pkg/golinters/unused.go
+    # Based on existing code, the modifications should be limited to make maintenance easier.
+    - path: pkg/golinters/unused/unused.go
       linters: [gocritic]
       text: "rangeValCopy: each iteration copies 160 bytes \\(consider pointers or indexing\\)"
 
@@ -195,4 +210,3 @@ issues:
 
 run:
   timeout: 5m
-

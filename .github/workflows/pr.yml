@@ -44,12 +44,9 @@ jobs:
           # - 1.18rc1 -> 1.18.0-rc.1
           go-version: ${{ env.GO_VERSION }}
       - name: lint
-        uses: golangci/golangci-lint-action@v4.0.0
+        uses: golangci/golangci-lint-action@v6.0.1
         with:
           version: latest
-          # skip cache because of flaky behaviors
-          skip-build-cache: true
-          skip-pkg-cache: true
 
   tests-on-windows:
     needs: golangci-lint # run after golangci-lint action to not produce duplicated errors
@@ -130,6 +127,17 @@ jobs:
         env:
           # needed for github-action-config.json generation
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check-local-install-script:
+    name: Installation script (local)
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check installation script
+        run: cat ./install.sh | sh -s -- -d -b "./install-golangci-lint"
 
   # Note: the command `run` is tested by the previous steps (`make test`).
   commands:

@@ -18,8 +18,8 @@ EOF
 }
 
 parse_args() {
-  #BINDIR is ./bin unless set be ENV
-  # over-ridden by flag below
+  # BINDIR is ./bin unless set be ENV
+  # overridden by flag below
 
   BINDIR=${BINDIR:-./bin}
   while getopts "b:dh?x" arg; do
@@ -150,9 +150,6 @@ is_command() {
 echoerr() {
   echo "$@" 1>&2
 }
-log_prefix() {
-  echo "$0"
-}
 _logp=6
 log_set_priority() {
   _logp="$1"
@@ -200,7 +197,7 @@ uname_os() {
     mingw*) os="windows" ;;
     cygwin*) os="windows" ;;
     win*) os="windows" ;;
-    sunos) [ $(uname -o) == "illumos" ] && os=illumos ;;
+    sunos) [ "$(uname -o)" = "illumos" ] && os=illumos ;;
   esac
   echo "$os"
 }
@@ -218,7 +215,7 @@ uname_arch() {
     armv7*) arch="armv7" ;;
     loongarch64) arch="loong64" ;;
   esac
-  echo ${arch}
+  echo "${arch}"
 }
 uname_os_check() {
   os=$(uname_os)
@@ -278,6 +275,26 @@ http_download_curl() {
   local_file=$1
   source_url=$2
   header=$3
+
+  # workaround https://github.com/curl/curl/issues/13845
+  curl_version=$(curl --version | head -n 1 | awk '{ print $2 }')
+  if [ "$curl_version" = "8.8.0" ]; then
+    log_debug "http_download_curl curl $curl_version detected"
+    if [ -z "$header" ]; then
+      curl -sL -o "$local_file" "$source_url"
+    else
+      curl -sL -H "$header" -o "$local_file" "$source_url"
+
+      nf=$(cat "$local_file" | jq -r '.error // ""')
+      if  [ ! -z "$nf" ]; then
+        log_debug "http_download_curl received an error: $nf"
+        return 1
+      fi
+    fi
+
+    return 0
+  fi
+
   if [ -z "$header" ]; then
     code=$(curl -w '%{http_code}' -sL -o "$local_file" "$source_url")
   else

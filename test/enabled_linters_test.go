@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/test/testshared"
@@ -110,7 +111,7 @@ func TestEnabledLinters(t *testing.T) {
 		},
 	}
 
-	testshared.InstallGolangciLint(t)
+	binPath := testshared.InstallGolangciLint(t)
 
 	for _, c := range cases {
 		c := c
@@ -127,6 +128,7 @@ func TestEnabledLinters(t *testing.T) {
 				WithArgs(args...).
 				WithArgs(c.args...).
 				WithConfig(c.cfg).
+				WithBinPath(binPath).
 				Runner().
 				Run()
 
@@ -147,7 +149,7 @@ func getEnabledByDefaultFastLintersExcept(t *testing.T, except ...string) []stri
 	ebdl := m.GetAllEnabledByDefaultLinters()
 	var ret []string
 	for _, lc := range ebdl {
-		if lc.IsSlowLinter() {
+		if lc.IsSlowLinter() || lc.Internal {
 			continue
 		}
 
@@ -162,15 +164,18 @@ func getEnabledByDefaultFastLintersExcept(t *testing.T, except ...string) []stri
 func getAllFastLintersWith(t *testing.T, with ...string) []string {
 	t.Helper()
 
+	ret := append([]string{}, with...)
+
 	dbManager, err := lintersdb.NewManager(nil, nil, lintersdb.NewLinterBuilder())
 	require.NoError(t, err)
 
 	linters := dbManager.GetAllSupportedLinterConfigs()
-	ret := append([]string{}, with...)
+
 	for _, lc := range linters {
-		if lc.IsSlowLinter() {
+		if lc.IsSlowLinter() || lc.Internal || (lc.IsDeprecated() && lc.Deprecation.Level > linter.DeprecationWarning) {
 			continue
 		}
+
 		ret = append(ret, lc.Name())
 	}
 
@@ -205,7 +210,7 @@ func getEnabledByDefaultFastLintersWith(t *testing.T, with ...string) []string {
 	ebdl := dbManager.GetAllEnabledByDefaultLinters()
 	ret := append([]string{}, with...)
 	for _, lc := range ebdl {
-		if lc.IsSlowLinter() {
+		if lc.IsSlowLinter() || lc.Internal {
 			continue
 		}
 

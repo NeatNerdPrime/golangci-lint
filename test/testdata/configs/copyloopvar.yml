@@ -1,3 +1,0 @@
-linters-settings:
-  copyloopvar:
-    ignore-alias: true

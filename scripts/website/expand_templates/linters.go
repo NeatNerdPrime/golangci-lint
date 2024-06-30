@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"unicode"
@@ -53,6 +54,22 @@ func getLintersListMarkdown(enabled bool) string {
 		return neededLcs[i].Name < neededLcs[j].Name
 	})
 
+	slices.SortFunc(neededLcs, func(a, b *types.LinterWrapper) int {
+		if a.IsDeprecated() && b.IsDeprecated() {
+			return strings.Compare(a.Name, b.Name)
+		}
+
+		if a.IsDeprecated() {
+			return 1
+		}
+
+		if b.IsDeprecated() {
+			return -1
+		}
+
+		return strings.Compare(a.Name, b.Name)
+	})
+
 	lines := []string{
 		"|Name|Description|Presets|AutoFix|Since|",
 		"|---|---|---|---|---|---|",
@@ -75,12 +92,17 @@ func getLintersListMarkdown(enabled bool) string {
 func getName(lc *types.LinterWrapper) string {
 	name := lc.Name
 
-	if lc.OriginalURL != "" {
-		name = fmt.Sprintf("[%s](%s)", name, lc.OriginalURL)
+	if hasSettings(lc.Name) {
+		name = fmt.Sprintf("[%[1]s](#%[2]s \"%[1]s configuration\")", name, lc.Name)
 	}
 
-	if hasSettings(lc.Name) {
-		name = fmt.Sprintf("%s&nbsp;[%s](#%s)", name, spanWithID(listItemPrefix+lc.Name, "Configuration", "⚙️"), lc.Name)
+	if lc.OriginalURL != "" {
+		icon := "<FaGithub size={'0.8rem'} />"
+		if strings.Contains(lc.OriginalURL, "gitlab") {
+			icon = "<FaGitlab size={'0.8rem'} />"
+		}
+
+		name = fmt.Sprintf("%s&nbsp;[%s](%s)", name, spanWithID(listItemPrefix+lc.Name, lc.Name+" repository", icon), lc.OriginalURL)
 	}
 
 	if lc.Deprecation == nil {

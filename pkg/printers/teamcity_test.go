@@ -56,17 +56,17 @@ func TestTeamCity_Print(t *testing.T) {
 	err := printer.Print(issues)
 	require.NoError(t, err)
 
-	expected := `##teamcity[InspectionType id='linter-a' name='linter-a' description='linter-a' category='Golangci-lint reports']
+	expected := `##teamcity[inspectionType id='linter-a' name='linter-a' description='linter-a' category='Golangci-lint reports']
 ##teamcity[inspection typeId='linter-a' message='warning issue' file='path/to/filea.go' line='10' SEVERITY='']
 ##teamcity[inspection typeId='linter-a' message='error issue' file='path/to/filea.go' line='10' SEVERITY='ERROR']
-##teamcity[InspectionType id='linter-b' name='linter-b' description='linter-b' category='Golangci-lint reports']
+##teamcity[inspectionType id='linter-b' name='linter-b' description='linter-b' category='Golangci-lint reports']
 ##teamcity[inspection typeId='linter-b' message='info issue' file='path/to/fileb.go' line='300' SEVERITY='']
 `
 
 	assert.Equal(t, expected, buf.String())
 }
 
-func TestTeamCity_limit(t *testing.T) {
+func TestTeamCity_cutVal(t *testing.T) {
 	tests := []struct {
 		input    string
 		max      int
@@ -100,6 +100,6 @@ func TestTeamCity_limit(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		require.Equal(t, tc.expected, limit(tc.input, tc.max))
+		require.Equal(t, tc.expected, cutVal(tc.input, tc.max))
 	}
 }
