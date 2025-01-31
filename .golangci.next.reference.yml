@@ -367,22 +367,24 @@ linters-settings:
     #
     # Variables:
     # - File Variables
-    #   you can still use and exclamation mark ! in front of a variable to say not to use it.
-    #   Example !$test will match any file that is not a go test file.
+    #   Use an exclamation mark `!` to negate a variable.
+    #   Example: `!$test` matches any file that is not a go test file.
     #
     #   `$all` - matches all go files
     #   `$test` - matches all go test files
     #
     # - Package Variables
     #
-    #  `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
+    #   `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
     #
-    # Default: Only allow $gostd in all files.
+    # Default (applies if no custom rules are defined): Only allow $gostd in all files.
     rules:
       # Name of a rule.
       main:
-        # Used to determine the package matching priority.
-        # There are three different modes: `original`, `strict`, and `lax`.
+        # Defines package matching behavior. Available modes:
+        # - `original`: allowed if it doesn't match the deny list and either matches the allow list or the allow list is empty.
+        # - `strict`: allowed only if it matches the allow list and either doesn't match the deny list or the allow rule is more specific (longer) than the deny rule.
+        # - `lax`: allowed if it doesn't match the deny list or the allow rule is more specific (longer) than the deny rule.
         # Default: "original"
         list-mode: lax
         # List of file globs that will match this list of settings to compare against.
@@ -390,11 +392,17 @@ linters-settings:
         files:
           - "!**/*_a _file.go"
         # List of allowed packages.
+        # Entries can be a variable (starting with $), a string prefix, or an exact match (if ending with $).
+        # Default: []
         allow:
           - $gostd
           - github.com/OpenPeeDeeP
-        # Packages that are not allowed where the value is a suggestion.
+        # List of packages that are not allowed.
+        # Entries can be a variable (starting with $), a string prefix, or an exact match (if ending with $).
+        # Default: []
         deny:
+          - pkg: "math/rand$"
+            desc: use math/rand/v2
           - pkg: "github.com/sirupsen/logrus"
             desc: not allowed
           - pkg: "github.com/pkg/errors"
@@ -539,6 +547,12 @@ linters-settings:
     # Default: []
     exclude:
       - '.+/cobra\.Command$'
+
+  fatcontext:
+    # Check for potential fat contexts in struct pointers.
+    # May generate false positives.
+    # Default: false
+    check-struct-pointers: true
 
   forbidigo:
     # Forbid the following identifiers (list of regexp).
@@ -1240,7 +1254,7 @@ linters-settings:
         failOn: dsl,import
         # Comma-separated list of file paths containing ruleguard rules.
         # If a path is relative, it is relative to the directory where the golangci-lint command is executed.
-        # The special '${configDir}' variable is substituted with the absolute directory containing the golangci config file.
+        # The special '${configDir}' variable is substituted with the absolute directory containing the golangci-lint config file.
         # Glob patterns such as 'rules-*.go' may be specified.
         # Default: ""
         rules: '${configDir}/ruleguard/rules-*.go,${configDir}/myrule1.go'
@@ -2363,7 +2377,7 @@ linters-settings:
     # This means that linting errors with less than 0.8 confidence will be ignored.
     # Default: 0.8
     confidence: 0.1
-
+    # Run `GL_DEBUG=revive golangci-lint run --enable-only=revive` to see default, all available rules, and enabled rules.
     rules:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
       - name: add-constant
@@ -2500,6 +2514,7 @@ linters-settings:
         exclude: [""]
         arguments:
           - "preserveScope"
+          - "allowJump"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#empty-block
       - name: empty-block
         severity: warning
@@ -2583,7 +2598,7 @@ linters-settings:
         disabled: false
         exclude: [""]
         arguments:
-          - "^[_a-z][_a-z0-9]*.go$"
+          - "^[_a-z][_a-z0-9]*\\.go$"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#flag-parameter
       - name: flag-parameter
         severity: warning
@@ -2718,6 +2733,11 @@ linters-settings:
         severity: warning
         disabled: false
         exclude: [""]
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#redundant-build-tag
+      - name: redundant-build-tag
+        severity: warning
+        disabled: false
+        exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#redundant-import-alias
       - name: redundant-import-alias
         severity: warning
@@ -2824,6 +2844,11 @@ linters-settings:
           - allowRegex: "^_"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#use-any
       - name: use-any
+        severity: warning
+        disabled: false
+        exclude: [""]
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#use-errors-new
+      - name: use-errors-new
         severity: warning
         disabled: false
         exclude: [""]
@@ -4018,6 +4043,10 @@ issues:
   # Default: false
   new: true
 
+  # Show only new issues created after the best common ancestor (merge-base against HEAD).
+  # Default: ""
+  new-from-merge-base: main
+
   # Show only new issues created after git revision `REV`.
   # Default: ""
   new-from-rev: HEAD
@@ -4115,6 +4144,16 @@ run:
   # If the value is lower or equal to 0, the timeout is disabled.
   # Default: 1m
   timeout: 5m
+
+  # The mode used to evaluate relative paths.
+  # It's used by exclusions, Go plugins, and some linters.
+  # The value can be:
+  # - `gomod`: the paths will be relative to the directory of the `go.mod` file.
+  # - `gitroot`: the paths will be relative to the git root (the parent directory of `.git`).
+  # - `cfg`: the paths will be relative to the configuration file.
+  # - `wd` (NOT recommended): the paths will be relative to the place where golangci-lint is run.
+  # Default: wd
+  relative-path-mode: gomod
 
   # Exit code when at least one issue was found.
   # Default: 1

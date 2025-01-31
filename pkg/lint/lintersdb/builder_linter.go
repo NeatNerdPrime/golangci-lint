@@ -181,6 +181,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 		linter.NewConfig(copyloopvar.New(&cfg.LintersSettings.CopyLoopVar)).
 			WithSince("v1.57.0").
 			WithPresets(linter.PresetStyle).
+			WithAutoFix().
 			WithURL("https://github.com/karamaru-alpha/copyloopvar").
 			WithNoopFallback(cfg, linter.IsGoLowerThanGo122()),
 
@@ -200,7 +201,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 			WithURL("https://github.com/remyoudompheng/go-misc/tree/master/deadcode").
 			DeprecatedError("The owner seems to have abandoned the linter.", "v1.49.0", "unused"),
 
-		linter.NewConfig(depguard.New(&cfg.LintersSettings.Depguard)).
+		linter.NewConfig(depguard.New(&cfg.LintersSettings.Depguard, cfg.GetBasePath())).
 			WithSince("v1.4.0").
 			WithPresets(linter.PresetStyle, linter.PresetImport, linter.PresetModule).
 			WithURL("https://github.com/OpenPeeDeeP/depguard"),
@@ -306,7 +307,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 			WithPresets(linter.PresetStyle).
 			WithURL("https://github.com/gostaticanalysis/forcetypeassert"),
 
-		linter.NewConfig(fatcontext.New()).
+		linter.NewConfig(fatcontext.New(&cfg.LintersSettings.Fatcontext)).
 			WithSince("v1.58.0").
 			WithPresets(linter.PresetPerformance).
 			WithLoadForGoAnalysis().
@@ -405,7 +406,7 @@ func (LinterBuilder) Build(cfg *config.Config) ([]*linter.Config, error) {
 			WithAutoFix().
 			WithURL("https://github.com/mvdan/gofumpt"),
 
-		linter.NewConfig(goheader.New(&cfg.LintersSettings.Goheader)).
+		linter.NewConfig(goheader.New(&cfg.LintersSettings.Goheader, cfg.GetBasePath())).
 			WithSince("v1.28.0").
 			WithPresets(linter.PresetStyle).
 			WithAutoFix().
