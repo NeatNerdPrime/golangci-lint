@@ -1,6 +1,7 @@
 package gci
 
 import (
+	"context"
 	"fmt"
 
 	gcicfg "github.com/daixiang0/gci/pkg/config"
@@ -9,6 +10,7 @@ import (
 	"github.com/ldez/grignotin/gomod"
 
 	"github.com/golangci/golangci-lint/pkg/config"
+	gcicfgi "github.com/golangci/golangci-lint/pkg/goformatters/gci/internal/config"
 	"github.com/golangci/golangci-lint/pkg/goformatters/internal"
 )
 
@@ -22,12 +24,12 @@ func New(settings *config.GciSettings) (*Formatter, error) {
 	log.InitLogger()
 	_ = log.L().Sync()
 
-	modPath, err := gomod.GetModulePath()
+	modPath, err := gomod.GetModulePath(context.Background())
 	if err != nil {
 		internal.FormatterLogger.Errorf("gci: %v", err)
 	}
 
-	cfg := gcicfg.YamlConfig{
+	cfg := gcicfgi.YamlConfig{
 		Cfg: gcicfg.BoolConfig{
 			NoInlineComments: settings.NoInlineComments,
 			NoPrefixComments: settings.NoPrefixComments,
@@ -52,7 +54,11 @@ func New(settings *config.GciSettings) (*Formatter, error) {
 		return nil, err
 	}
 
-	return &Formatter{config: parsedCfg}, nil
+	return &Formatter{config: &gcicfg.Config{
+		BoolConfig:        parsedCfg.BoolConfig,
+		Sections:          parsedCfg.Sections,
+		SectionSeparators: parsedCfg.SectionSeparators,
+	}}, nil
 }
 
 func (*Formatter) Name() string {

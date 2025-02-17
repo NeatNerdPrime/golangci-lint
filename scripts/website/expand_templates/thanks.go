@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/maps"
 
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
@@ -36,14 +35,7 @@ func getThanksList() string {
 			continue
 		}
 
-		linterURL := lc.OriginalURL
-		if lc.Name() == "staticcheck" {
-			linterURL = "https://github.com/dominikh/go-tools"
-		}
-
-		if strings.HasPrefix(lc.OriginalURL, "https://github.com/gostaticanalysis/") {
-			linterURL = "https://github.com/tenntenn/gostaticanalysis"
-		}
+		linterURL := extractLinterURL(lc)
 
 		if author := extractAuthor(linterURL, "https://github.com/"); author != "" && author != "golangci" {
 			if _, ok := addedAuthors[author]; ok {
@@ -69,9 +61,8 @@ func getThanksList() string {
 		}
 	}
 
-	authors := maps.Keys(addedAuthors)
-	sort.Slice(authors, func(i, j int) bool {
-		return strings.ToLower(authors[i]) < strings.ToLower(authors[j])
+	authors := slices.SortedFunc(maps.Keys(addedAuthors), func(a string, b string) int {
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))
 	})
 
 	lines := []string{
@@ -85,6 +76,27 @@ func getThanksList() string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func extractLinterURL(lc *linter.Config) string {
+	switch lc.Name() {
+	case "staticcheck":
+		return "https://github.com/dominikh/go-tools"
+
+	case "depguard":
+		return "https://github.com/dixonwille/depguard"
+
+	default:
+		if strings.HasPrefix(lc.OriginalURL, "https://github.com/gostaticanalysis/") {
+			return "https://github.com/tenntenn/gostaticanalysis"
+		}
+
+		if strings.HasPrefix(lc.OriginalURL, "https://github.com/go-simpler/") {
+			return "https://github.com/tmzane/go-simpler"
+		}
+
+		return lc.OriginalURL
+	}
 }
 
 func extractAuthor(originalURL, prefix string) string {

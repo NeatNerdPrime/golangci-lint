@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	hcversion "github.com/hashicorp/go-version"
 
@@ -28,25 +27,21 @@ func copySchemas() error {
 		return fmt.Errorf("remove dir: %w", err)
 	}
 
-	err = os.MkdirAll(dstDir, os.ModePerm)
+	err = os.CopyFS(dstDir, os.DirFS("jsonschema"))
 	if err != nil {
-		return fmt.Errorf("make dir: %w", err)
+		return fmt.Errorf("copy FS: %w", err)
 	}
 
-	// The key is the destination file.
-	// The value is the source file.
-	files := map[string]string{}
-
-	entries, err := os.ReadDir("jsonschema")
+	err = copyLatestSchema(dstDir)
 	if err != nil {
-		return fmt.Errorf("read dir: %w", err)
+		return fmt.Errorf("copy files: %w", err)
 	}
 
-	for _, entry := range entries {
-		if strings.HasSuffix(entry.Name(), ".jsonschema.json") {
-			files[entry.Name()] = entry.Name()
-		}
-	}
+	return nil
+}
+
+func copyLatestSchema(dstDir string) error {
+	src := filepath.FromSlash("jsonschema/golangci.jsonschema.json")
 
 	latest, err := github.GetLatestVersion()
 	if err != nil {
@@ -58,20 +53,22 @@ func copySchemas() error {
 		return fmt.Errorf("parse version: %w", err)
 	}
 
-	versioned := fmt.Sprintf("golangci.v%d.%d.jsonschema.json", version.Segments()[0], version.Segments()[1])
-	files[versioned] = "golangci.jsonschema.json"
+	files := []string{
+		fmt.Sprintf("golangci.v%d.jsonschema.json", version.Segments()[0]),
+		fmt.Sprintf("golangci.v%d.%d.jsonschema.json", version.Segments()[0], version.Segments()[1]),
+	}
 
-	for dst, src := range files {
-		err := copyFile(filepath.Join("jsonschema", src), filepath.Join(dstDir, dst))
+	for _, dst := range files {
+		err = copyFile(filepath.Join(dstDir, dst), src)
 		if err != nil {
-			return fmt.Errorf("copy files: %w", err)
+			return fmt.Errorf("copy file %s to %s: %w", src, dst, err)
 		}
 	}
 
 	return nil
 }
 
-func copyFile(src, dst string) error {
+func copyFile(dst, src string) error {
 	source, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("open file %s: %w", src, err)
@@ -93,7 +90,7 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(destination, source)
 	if err != nil {
-		return fmt.Errorf("copy file %s to %s: %w", src, dst, err)
+		return err
 	}
 
 	return nil

@@ -88,13 +88,14 @@
   },
   {
     "name": "copyloopvar",
-    "desc": "copyloopvar is a linter detects places where loop variables are copied",
+    "desc": "a linter detects places where loop variables are copied",
     "loadMode": 8199,
     "inPresets": [
       "style"
     ],
     "originalURL": "https://github.com/karamaru-alpha/copyloopvar",
     "internal": false,
+    "canAutoFix": true,
     "isSlow": false,
     "since": "v1.57.0"
   },
@@ -263,23 +264,6 @@
     "since": "v1.46.0"
   },
   {
-    "name": "exportloopref",
-    "desc": "checks for pointers to enclosing loop variables",
-    "loadMode": 8767,
-    "inPresets": [
-      "bugs"
-    ],
-    "originalURL": "https://github.com/kyoh86/exportloopref",
-    "internal": false,
-    "isSlow": true,
-    "since": "v1.28.0",
-    "deprecation": {
-      "since": "v1.60.2",
-      "message": "Since Go1.22 (loopvar) this linter is no longer relevant.",
-      "replacement": "copyloopvar"
-    }
-  },
-  {
     "name": "exptostd",
     "desc": "Detects functions from golang.org/x/exp/ that can be replaced by std functions.",
     "loadMode": 8767,
@@ -307,13 +291,13 @@
   {
     "name": "forcetypeassert",
     "desc": "finds forced type assertions",
-    "loadMode": 8199,
+    "loadMode": 8767,
     "inPresets": [
       "style"
     ],
     "originalURL": "https://github.com/gostaticanalysis/forcetypeassert",
     "internal": false,
-    "isSlow": false,
+    "isSlow": true,
     "since": "v1.38.0"
   },
   {
@@ -343,7 +327,7 @@
   },
   {
     "name": "gci",
-    "desc": "Checks if code and import statements are formatted, it makes import statements always deterministic.",
+    "desc": "Checks if code and import statements are formatted, with additional rules.",
     "loadMode": 8199,
     "inPresets": [
       "format",
@@ -481,7 +465,7 @@
   },
   {
     "name": "godox",
-    "desc": "Tool for detection of FIXME, TODO and other comment keywords",
+    "desc": "Detects usage of FIXME, TODO and other keywords inside comments",
     "loadMode": 8199,
     "inPresets": [
       "style",
@@ -639,7 +623,7 @@
     "alternativeNames": [
       "megacheck"
     ],
-    "originalURL": "https://github.com/dominikh/go-tools/tree/master/simple",
+    "originalURL": "https://github.com/dominikh/go-tools/tree/HEAD/simple",
     "internal": false,
     "canAutoFix": true,
     "isSlow": true,
@@ -907,7 +891,7 @@
   },
   {
     "name": "nilnesserr",
-    "desc": "Reports constructs that checks for err != nil, but returns a different nil value error. Powered by nilness and nilerr.",
+    "desc": "Reports constructs that checks for err != nil, but returns a different nil value error.\nPowered by nilness and nilerr.",
     "loadMode": 8767,
     "inPresets": [
       "bugs"
@@ -1167,7 +1151,7 @@
     "inPresets": [
       "style"
     ],
-    "originalURL": "https://github.com/dominikh/go-tools/tree/master/stylecheck",
+    "originalURL": "https://github.com/dominikh/go-tools/tree/HEAD/stylecheck",
     "internal": false,
     "canAutoFix": true,
     "isSlow": true,
@@ -1208,7 +1192,12 @@
     "originalURL": "https://github.com/sivchari/tenv",
     "internal": false,
     "isSlow": true,
-    "since": "v1.43.0"
+    "since": "v1.43.0",
+    "deprecation": {
+      "since": "v1.64.0",
+      "message": "Duplicate feature another linter.",
+      "replacement": "usetesting"
+    }
   },
   {
     "name": "testableexamples",
@@ -1318,7 +1307,7 @@
     "alternativeNames": [
       "megacheck"
     ],
-    "originalURL": "https://github.com/dominikh/go-tools/tree/master/unused",
+    "originalURL": "https://github.com/dominikh/go-tools/tree/HEAD/unused",
     "internal": false,
     "isSlow": true,
     "doesChangeTypes": true,
@@ -1432,7 +1421,7 @@
     "inPresets": [
       "style"
     ],
-    "originalURL": "https://github.com/golangci/golangci-lint/tree/master/pkg/golinters/nolintlint/internal",
+    "originalURL": "https://github.com/golangci/golangci-lint/tree/HEAD/pkg/golinters/nolintlint/internal",
     "internal": false,
     "canAutoFix": true,
     "isSlow": false,
